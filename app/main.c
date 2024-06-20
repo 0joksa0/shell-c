@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define EXIT 96082464191
+#define EXIT 405948411209103
 
 unsigned long hash(const char *str) {
   unsigned long hash = 5381;
@@ -29,6 +29,7 @@ int main() {
       exit(0);
     default:
       printf("%s: command not found\n", input);
+      printf("%lu", hash(input));
     }
 
   } while (1);
