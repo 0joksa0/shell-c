@@ -4,6 +4,7 @@
 
 #define EXIT 96082464191
 #define ECHO 96082375396
+#define TYPE 96086588231
 
 unsigned long hash(const char *str) {
   unsigned long hash = 5381;
@@ -13,6 +14,15 @@ unsigned long hash(const char *str) {
     hash = ((hash << 5) + hash * 33) + c;
 
   return hash;
+}
+
+void typeFunction(char *str) {
+  unsigned long hashCode = hash(str);
+  if (hashCode == TYPE || hashCode == EXIT || hashCode == ECHO) {
+    printf("%s is a shell builtin\n", str);
+  } else {
+    printf("%s: not found\n", str);
+  }
 }
 
 int main() {
@@ -35,6 +45,9 @@ int main() {
       break;
     case ECHO:
       printf("%s\n", reminder);
+      break;
+    case TYPE:
+      typeFunction(reminder);
       break;
     default:
       printf("%s: command not found\n", operation);
