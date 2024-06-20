@@ -2,15 +2,18 @@
 #include <string.h>
 
 int main() {
-  printf("$ ");
-  fflush(stdout);
 
   // Wait for user input
   char input[100];
-  fgets(input, 100, stdin);
+  do {
+    printf("$ ");
+    fflush(stdout);
 
-  input[strcspn(input, "\n")] = 0;
-  printf("%s: command not found\n", input);
+    fgets(input, 100, stdin);
+    input[strcspn(input, "\n")] = 0;
+    printf("%s: command not found\n", input);
+
+  } while (strcspn(input, "exit") > 0);
 
   return 0;
 }
