@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define EXIT 405948411209103
+#define ECHO 96082375396
 
 unsigned long hash(const char *str) {
   unsigned long hash = 5381;
@@ -24,11 +25,19 @@ int main() {
 
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = 0;
-    switch (hash(input)) {
+    char *reminder;
+    char *operation = strtok_r(input, " ", &reminder);
+
+    switch (hash(operation)) {
+
     case EXIT:
       exit(0);
+      break;
+    case ECHO:
+      printf("%s\n", reminder);
+      break;
     default:
-      printf("%s: command not found\n", input);
+      printf("%s: command not found\n", operation);
       // printf("%lu", hash(input));
     }
 
