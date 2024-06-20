@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define EXIT 96082464191
@@ -25,7 +26,7 @@ int main() {
     input[strcspn(input, "\n")] = 0;
     switch (hash(input)) {
     case EXIT:
-      return 0;
+      exit(0);
     default:
       printf("%s: command not found\n", input);
     }
