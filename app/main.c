@@ -12,8 +12,8 @@ int main() {
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = 0;
     printf("%s: command not found\n", input);
-
-  } while (strcspn(input, "exit") > 0);
+  } while (1);
+  //} while (strcspn(input, "exit") > 0);
 
   return 0;
 }
