@@ -33,12 +33,12 @@ void typeFunction(char *str, char **envPaths) {
       continue;
     while ((dir = readdir(d)) != NULL) {
       if (strstr(dir->d_name, str) != NULL) {
-        printf("%s is %s", str, dir->d_name);
+        printf("%s is %s\n", str, dir->d_name);
         return;
       }
     }
   }
-  printf("%s: not found", str);
+  printf("%s: not found\n", str);
 }
 
 char **getEnvPaths() {
