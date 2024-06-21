@@ -32,7 +32,7 @@ void typeFunction(char *str, char **envPaths) {
     if (!d)
       continue;
     while ((dir = readdir(d)) != NULL) {
-      if (strstr(dir->d_name, str) != NULL) {
+      if (strcmp(dir->d_name, str) == 0) {
         char *result;
         printf("%s is %s/%s\n", str, *pom, dir->d_name);
         return;
