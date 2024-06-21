@@ -1,3 +1,5 @@
+#include <dirent.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,19 +18,62 @@ unsigned long hash(const char *str) {
   return hash;
 }
 
-void typeFunction(char *str) {
+void typeFunction(char *str, char **envPaths) {
   unsigned long hashCode = hash(str);
   if (hashCode == TYPE || hashCode == EXIT || hashCode == ECHO) {
     printf("%s is a shell builtin\n", str);
-  } else {
-    printf("%s: not found\n", str);
+    return;
   }
+  char **pom = envPaths;
+  while (*pom) {
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(*pom);
+    if (!d)
+      continue;
+    while ((dir = readdir(d)) != NULL) {
+      if (strstr(dir->d_name, str) != NULL) {
+        printf("%s is %s", str, dir->d_name);
+        return;
+      }
+    }
+  }
+  printf("%s: not found", str);
+}
+
+char **getEnvPaths() {
+  char *envString = getenv("PATH");
+  char **list = NULL;
+
+  int size = 1;
+  for (int i = 0; i < strlen(envString); i++) {
+    size += envString[i] == ':' ? 1 : 0;
+  }
+
+  char *p = strtok(envString, ":");
+  list = (char **)malloc(size * sizeof(char *));
+
+  while (p != NULL) {
+    list[size - 1] = malloc(20 * sizeof(char));
+    strcpy(list[size - 1], p);
+    p = strtok(NULL, ":");
+    size--;
+  }
+
+  return list;
 }
 
 int main() {
 
   // Wait for user input
   char input[100];
+  char **envPaths = getEnvPaths();
+  char **pom = envPaths;
+  while (*pom) {
+    printf("%s\n", *pom);
+    pom++;
+  }
+
   do {
     printf("$ ");
     fflush(stdout);
@@ -47,7 +92,7 @@ int main() {
       printf("%s\n", reminder);
       break;
     case TYPE:
-      typeFunction(reminder);
+      typeFunction(reminder, envPaths);
       break;
     default:
       printf("%s: command not found\n", operation);
