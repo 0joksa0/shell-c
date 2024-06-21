@@ -69,10 +69,6 @@ int main() {
   char input[100];
   char **envPaths = getEnvPaths();
   char **pom = envPaths;
-  while (*pom) {
-    printf("%s\n", *pom);
-    pom++;
-  }
 
   do {
     printf("$ ");
