@@ -1,13 +1,13 @@
 #include <dirent.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define EXIT 96082464191
 #define ECHO 96082375396
 #define TYPE 96086588231
+
+#define PATH_MAX 4096
 
 int size = 0;
 
@@ -50,6 +50,62 @@ void typeFunction(char *str, char **envPaths) {
   return;
 }
 
+void systemOtherFunction(char *operation, char *params, char **envPaths) {
+
+  char **pom = envPaths;
+  if (envPaths != NULL)
+    for (int i = 0; i < size; i++) {
+      DIR *d;
+      struct dirent *dir;
+      d = opendir(pom[i]);
+      if (!d) {
+        continue;
+      }
+      while ((dir = readdir(d)) != NULL) {
+        if (strcmp(dir->d_name, operation) == 0) {
+          FILE *fp;
+
+          int status;
+
+          char data[1024];
+
+          char *command = (char *)malloc(sizeof(char) * 100);
+
+          strcat(command, pom[i]);
+          strcat(command, "/");
+          strcat(command, operation);
+          strcat(command, " ");
+          strcat(command, params);
+
+          fp = popen(command, "w");
+          if (fp == NULL) {
+            printf("Error");
+          }
+
+          while (fgets(data, 1024, fp) != NULL)
+            printf("console :%s \n", data);
+
+          status = pclose(fp);
+
+          // if (status == -1) {
+          // perror("pclose");
+          //}
+          // else if (WIFSIGNALED(status)) {
+          //  printf("terminating signal: %d", WTERMSIG(status));
+          // } else if (WIFEXITED(status)) {
+          //  printf("exit with status: %d", WEXITSTATUS(status));
+          // } else {
+          //  printf("unexpected: %d", status);
+          // }
+
+          return;
+        }
+      }
+      closedir(d);
+    }
+  printf("%s: not found\n", operation);
+}
+
 char **getEnvPaths() {
   char *envString = getenv("PATH");
   // printf("%s", envString);
@@ -79,7 +135,7 @@ char **getEnvPaths() {
   return list;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
   // Wait for user input
   char input[100];
@@ -107,8 +163,9 @@ int main() {
       typeFunction(reminder, envPaths);
       break;
     default:
-      printf("%s: command not found\n", operation);
-      // printf("%lu", hash(input));
+      systemOtherFunction(operation, reminder, envPaths);
+      // printf("%s: command not found\n", operation);
+      //  printf("%lu", hash(input));
     }
 
   } while (1);
