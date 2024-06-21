@@ -34,13 +34,11 @@ void typeFunction(char *str, char **envPaths) {
     while ((dir = readdir(d)) != NULL) {
       if (strstr(dir->d_name, str) != NULL) {
         char *result;
-        strcpy(result, *pom);
-        strcpy(result, "/");
-        strcpy(result, dir->d_name);
-        printf("%s is %s\n", str, dir->d_name);
+        printf("%s is %s/%s\n", str, *pom, dir->d_name);
         return;
       }
     }
+    closedir(d);
     pom++;
   }
   printf("%s: not found\n", str);
