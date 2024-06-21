@@ -3,10 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define EXIT 96082464191
 #define ECHO 96082375396
 #define TYPE 96086588231
+
+int size = 0;
 
 unsigned long hash(const char *str) {
   unsigned long hash = 5381;
@@ -14,7 +17,6 @@ unsigned long hash(const char *str) {
 
   while ((c = *str++))
     hash = ((hash << 5) + hash * 33) + c;
-
   return hash;
 }
 
@@ -25,42 +27,53 @@ void typeFunction(char *str, char **envPaths) {
     return;
   }
   char **pom = envPaths;
-  while (*pom) {
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(*pom);
-    if (!d)
-      continue;
-    while ((dir = readdir(d)) != NULL) {
-      if (strcmp(dir->d_name, str) == 0) {
-        char *result;
-        printf("%s is %s/%s\n", str, *pom, dir->d_name);
-        return;
+  if (envPaths != NULL)
+    for (int i = 0; i < size; i++) {
+      DIR *d;
+      struct dirent *dir;
+      // printf("%s", pom[i]);
+      d = opendir(pom[i]);
+      if (!d) {
+        //        closedir(d);
+        continue;
       }
+      while ((dir = readdir(d)) != NULL) {
+        if (strcmp(dir->d_name, str) == 0) {
+          char *result;
+          printf("%s is %s/%s\n", str, pom[i], dir->d_name);
+          return;
+        }
+      }
+      closedir(d);
     }
-    closedir(d);
-    pom++;
-  }
   printf("%s: not found\n", str);
+  return;
 }
 
 char **getEnvPaths() {
   char *envString = getenv("PATH");
+  // printf("%s", envString);
   char **list = NULL;
 
-  int size = 1;
+  if (strlen(envString) <= 0) {
+    return list;
+  }
+
+  size = 1;
   for (int i = 0; i < strlen(envString); i++) {
     size += envString[i] == ':' ? 1 : 0;
   }
 
-  char *p = strtok(envString, ":");
-  list = (char **)malloc(size * sizeof(char *));
+  // printf("%d\n", size);
 
-  while (p != NULL) {
-    list[size - 1] = malloc(20 * sizeof(char));
-    strcpy(list[size - 1], p);
+  list = (char **)malloc(size * sizeof(char *));
+  char *p = strtok(envString, ":");
+
+  for (int i = 0; i < size; i++) {
+    list[i] = malloc((strlen(p) + 2) * sizeof(char));
+    strcpy(list[i], p);
+    // printf("p: %s list: %s size: %lu\n", p, list[i], strlen(p));
     p = strtok(NULL, ":");
-    size--;
   }
 
   return list;
