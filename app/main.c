@@ -41,6 +41,7 @@ void typeFunction(char *str, char **envPaths) {
         return;
       }
     }
+    pom++;
   }
   printf("%s: not found\n", str);
 }
