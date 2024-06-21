@@ -70,13 +70,11 @@ void systemOtherFunction(char *operation, char *params, char **envPaths) {
           char data[1024];
 
           char *command = (char *)malloc(sizeof(char) * 100);
-
-          strcat(command, pom[i]);
+          strcpy(command, pom[i]);
           strcat(command, "/");
           strcat(command, operation);
           strcat(command, " ");
           strcat(command, params);
-
           fp = popen(command, "w");
           if (fp == NULL) {
             printf("Error");
