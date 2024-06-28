@@ -9,10 +9,12 @@
 #define ECHO 96082375396
 #define TYPE 96086588231
 #define PWD 1478238160
+#define CD 11478238160
 
 #define PATH_MAX 4096
 
 int size = 0;
+char cwd[1024];
 
 unsigned long hash(const char *str) {
   unsigned long hash = 5381;
@@ -85,6 +87,15 @@ void systemOtherFunction(char *operation, char *params, char **envPaths) {
   return;
 }
 
+void cdFunction(char *path) {
+  if (!path) {
+    printf("Error");
+  }
+
+  if (access(path, F_OK) == 0)
+    strcpy(cwd, path);
+}
+
 char **getEnvPaths() {
   char *envString = getenv("PATH");
 
@@ -127,7 +138,6 @@ int main(int argc, char *argv[]) {
 
   // Wait for user input
   char input[100];
-  char cwd[1024];
   char **envPaths = getEnvPaths();
   if (!envPaths) {
     fprintf(stderr, "Failed to get EnvPaths! \n");
@@ -137,8 +147,6 @@ int main(int argc, char *argv[]) {
   do {
     printf("$ ");
     fflush(stdout);
-
-    // printf("%lu", hash("pwd"));
 
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = 0;
@@ -158,10 +166,16 @@ int main(int argc, char *argv[]) {
       typeFunction(reminder, envPaths);
       break;
     case PWD:
-      getcwd(cwd, sizeof(cwd));
+      if (strlen(cwd) == 0) {
+        getcwd(cwd, sizeof(cwd));
+      }
       printf("%s\n", cwd);
       break;
+    case CD:
+      cdFunction(reminder);
+      break;
     default:
+      // printf("%lu", hash("pwd"));
       systemOtherFunction(operation, reminder, envPaths);
     }
 
