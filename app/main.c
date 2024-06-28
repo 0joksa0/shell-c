@@ -9,7 +9,7 @@
 #define ECHO 96082375396
 #define TYPE 96086588231
 #define PWD 1478238160
-#define CD 11478238160
+#define CD 22741260
 
 #define PATH_MAX 4096
 
@@ -94,6 +94,8 @@ void cdFunction(char *path) {
 
   if (access(path, F_OK) == 0)
     strcpy(cwd, path);
+  else
+    printf("cd: %s: No such file or directory\n", path);
 }
 
 char **getEnvPaths() {
@@ -153,6 +155,7 @@ int main(int argc, char *argv[]) {
     char *reminder;
     char *operation = strtok_r(input, " ", &reminder);
 
+    // printf("%lu", hash(operation));
     switch (hash(operation)) {
     case EXIT:
       cleanup(envPaths);
@@ -175,7 +178,6 @@ int main(int argc, char *argv[]) {
       cdFunction(reminder);
       break;
     default:
-      // printf("%lu", hash("pwd"));
       systemOtherFunction(operation, reminder, envPaths);
     }
 
