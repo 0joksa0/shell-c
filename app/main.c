@@ -92,9 +92,10 @@ void cdFunction(char *path) {
     printf("Error");
   }
 
-  if (access(path, F_OK) == 0)
-    strcpy(cwd, path);
-  else
+  if (access(path, F_OK) == 0) {
+    chdir(path);
+    // setenv("PWD", path, 0);
+  } else
     printf("cd: %s: No such file or directory\n", path);
 }
 
@@ -169,9 +170,7 @@ int main(int argc, char *argv[]) {
       typeFunction(reminder, envPaths);
       break;
     case PWD:
-      if (strlen(cwd) == 0) {
-        getcwd(cwd, sizeof(cwd));
-      }
+      getcwd(cwd, sizeof(cwd));
       printf("%s\n", cwd);
       break;
     case CD:
