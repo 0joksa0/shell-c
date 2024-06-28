@@ -91,6 +91,12 @@ void cdFunction(char *path) {
   if (!path) {
     printf("Error");
   }
+  if (path[0] == '~') {
+    path++;
+    char *home = getenv("HOME");
+    strcat(home, path);
+    path = home;
+  }
 
   if (access(path, F_OK) == 0) {
     chdir(path);
