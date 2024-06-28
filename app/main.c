@@ -2,10 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 #define EXIT 96082464191
 #define ECHO 96082375396
 #define TYPE 96086588231
+#define PWD 1478238160
 
 #define PATH_MAX 4096
 
@@ -20,97 +23,73 @@ unsigned long hash(const char *str) {
   return hash;
 }
 
+char *getFunctionPath(char *function, char **envPaths) {
+  if (!function || !envPaths) {
+    return NULL;
+  }
+
+  static char fullPath[PATH_MAX];
+
+  for (int i = 0; i < size; i++) {
+    snprintf(fullPath, PATH_MAX, "%s/%s", envPaths[i], function);
+    if (access(fullPath, X_OK) == 0) {
+      return fullPath;
+    }
+  }
+  return NULL;
+}
+
 void typeFunction(char *str, char **envPaths) {
   unsigned long hashCode = hash(str);
-  if (hashCode == TYPE || hashCode == EXIT || hashCode == ECHO) {
+  if (hashCode == TYPE || hashCode == EXIT || hashCode == ECHO ||
+      hashCode == PWD) {
     printf("%s is a shell builtin\n", str);
     return;
   }
-  char **pom = envPaths;
-  if (envPaths != NULL)
-    for (int i = 0; i < size; i++) {
-      DIR *d;
-      struct dirent *dir;
-      // printf("%s", pom[i]);
-      d = opendir(pom[i]);
-      if (!d) {
-        //        closedir(d);
-        continue;
-      }
-      while ((dir = readdir(d)) != NULL) {
-        if (strcmp(dir->d_name, str) == 0) {
-          char *result;
-          printf("%s is %s/%s\n", str, pom[i], dir->d_name);
-          return;
-        }
-      }
-      closedir(d);
-    }
-  printf("%s: not found\n", str);
-  return;
+
+  char *fullPath = getFunctionPath(str, envPaths);
+
+  if (!fullPath) {
+    printf("%s: not found\n", str);
+    return;
+  }
+
+  printf("%s is %s\n", str, fullPath);
 }
 
 void systemOtherFunction(char *operation, char *params, char **envPaths) {
 
-  char **pom = envPaths;
-  if (envPaths != NULL)
-    for (int i = 0; i < size; i++) {
-      DIR *d;
-      struct dirent *dir;
-      d = opendir(pom[i]);
-      if (!d) {
-        continue;
-      }
-      while ((dir = readdir(d)) != NULL) {
-        if (strcmp(dir->d_name, operation) == 0) {
-          FILE *fp;
+  char *fullPath = getFunctionPath(operation, envPaths);
 
-          int status;
+  if (!fullPath) {
+    printf("%s: not found\n", operation);
+    return;
+  }
 
-          char data[1024];
+  FILE *fp;
+  char data[PATH_MAX];
+  char command[PATH_MAX];
+  snprintf(command, sizeof(command), "%s %s", fullPath, params ? params : "");
 
-          char *command = (char *)malloc(sizeof(char) * 100);
-          strcpy(command, pom[i]);
-          strcat(command, "/");
-          strcat(command, operation);
-          strcat(command, " ");
-          strcat(command, params);
-          fp = popen(command, "w");
-          if (fp == NULL) {
-            printf("Error");
-          }
+  // printf("%s", command);
+  fp = popen(command, "r");
+  if (fp == NULL) {
+    printf("Error running a command");
+  }
 
-          while (fgets(data, 1024, fp) != NULL)
-            printf("console :%s \n", data);
+  while (fgets(data, 1024, fp) != NULL)
+    printf("%s", data);
 
-          status = pclose(fp);
+  pclose(fp);
 
-          // if (status == -1) {
-          // perror("pclose");
-          //}
-          // else if (WIFSIGNALED(status)) {
-          //  printf("terminating signal: %d", WTERMSIG(status));
-          // } else if (WIFEXITED(status)) {
-          //  printf("exit with status: %d", WEXITSTATUS(status));
-          // } else {
-          //  printf("unexpected: %d", status);
-          // }
-
-          return;
-        }
-      }
-      closedir(d);
-    }
-  printf("%s: not found\n", operation);
+  return;
 }
 
 char **getEnvPaths() {
   char *envString = getenv("PATH");
-  // printf("%s", envString);
-  char **list = NULL;
 
-  if (strlen(envString) <= 0) {
-    return list;
+  if (!envString || strlen(envString) == 0) {
+    return NULL;
   }
 
   size = 1;
@@ -118,31 +97,48 @@ char **getEnvPaths() {
     size += envString[i] == ':' ? 1 : 0;
   }
 
-  // printf("%d\n", size);
+  char **list = (char **)malloc(size * sizeof(char *));
+  if (!list) {
+    perror("malloc");
+    return NULL;
+  }
 
-  list = (char **)malloc(size * sizeof(char *));
   char *p = strtok(envString, ":");
-
   for (int i = 0; i < size; i++) {
-    list[i] = malloc((strlen(p) + 2) * sizeof(char));
-    strcpy(list[i], p);
-    // printf("p: %s list: %s size: %lu\n", p, list[i], strlen(p));
+    list[i] = p;
+
+    if (!list[i]) {
+      perror("Strdup error encountered");
+      for (int j = 0; j < i; j++)
+        free(list[j]);
+      free(list);
+      return NULL;
+    }
+
     p = strtok(NULL, ":");
   }
 
   return list;
 }
 
+void cleanup(char **envPaths) { free(envPaths); }
+
 int main(int argc, char *argv[]) {
 
   // Wait for user input
   char input[100];
+  char cwd[1024];
   char **envPaths = getEnvPaths();
-  char **pom = envPaths;
+  if (!envPaths) {
+    fprintf(stderr, "Failed to get EnvPaths! \n");
+    return EXIT_FAILURE;
+  }
 
   do {
     printf("$ ");
     fflush(stdout);
+
+    // printf("%lu", hash("pwd"));
 
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = 0;
@@ -150,23 +146,26 @@ int main(int argc, char *argv[]) {
     char *operation = strtok_r(input, " ", &reminder);
 
     switch (hash(operation)) {
-
     case EXIT:
+      cleanup(envPaths);
       exit(0);
       break;
     case ECHO:
       printf("%s\n", reminder);
+
       break;
     case TYPE:
       typeFunction(reminder, envPaths);
       break;
+    case PWD:
+      getcwd(cwd, sizeof(cwd));
+      printf("%s\n", cwd);
+      break;
     default:
       systemOtherFunction(operation, reminder, envPaths);
-      // printf("%s: command not found\n", operation);
-      //  printf("%lu", hash(input));
     }
 
   } while (1);
-
+  cleanup(envPaths);
   return 0;
 }
