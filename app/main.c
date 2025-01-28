@@ -183,6 +183,11 @@ void removeSingleQuotes(char **input, bool escChar) {
       i--;
       continue;
     }
+    if ((*input)[i] == '\\') {
+      shiftLeftFromPosition(input, i);
+      size--;
+      continue;
+    }
     if ((*input)[i] == ' ' && singelQoute && escChar) {
       shiftRightFromPosition(input, i);
       (*input)[i] = '\\';
