@@ -176,14 +176,14 @@ void removeSingleQuotes(char **input, bool escChar) {
       i--;
       continue;
     }
-    if ((*input)[i] == '\"') {
+    if ((*input)[i] == '\"' && !singelQoute) {
       doubleQuote = !doubleQuote;
       shiftLeftFromPosition(input, i);
       size--;
       i--;
       continue;
     }
-    if ((*input)[i] == '\\') {
+    if ((*input)[i] == '\\' && (!singelQoute && !doubleQuote)) {
       shiftLeftFromPosition(input, i);
       size--;
       continue;
