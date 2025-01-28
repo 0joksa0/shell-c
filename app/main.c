@@ -166,10 +166,18 @@ void shiftRightFromPosition(char **input, int position) {
 void removeSingleQuotes(char **input, bool escChar) {
   int size = strlen(*input);
   bool singelQoute = false;
+  bool doubleQuote = false;
   bool trailingSpace = false;
   for (int i = 0; i < size; i++) {
-    if ((*input)[i] == '\'') {
+    if ((*input)[i] == '\'' && !doubleQuote) {
       singelQoute = !singelQoute;
+      shiftLeftFromPosition(input, i);
+      size--;
+      i--;
+      continue;
+    }
+    if ((*input)[i] == '\"') {
+      doubleQuote = !doubleQuote;
       shiftLeftFromPosition(input, i);
       size--;
       i--;
@@ -182,7 +190,7 @@ void removeSingleQuotes(char **input, bool escChar) {
       i++;
       continue;
     }
-    if ((*input)[i] == ' ' && !singelQoute) {
+    if ((*input)[i] == ' ' && (!singelQoute && !doubleQuote)) {
       if (trailingSpace) {
         shiftLeftFromPosition(input, i);
         size--;
