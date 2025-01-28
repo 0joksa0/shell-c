@@ -64,7 +64,7 @@ void systemOtherFunction(char *operation, char *params, char **envPaths) {
 
   char *fullPath = getFunctionPath(operation, envPaths);
   if (!fullPath) {
-    printf("%s: command not found\n", operation);
+    fprintf(stderr, "%s: command not found\n", operation);
     return;
   }
 
@@ -224,7 +224,6 @@ int main(int argc, char *argv[]) {
     case ECHO:
       removeSingleQuotes(&reminder, false);
       printf("%s\n", reminder);
-
       break;
     case TYPE:
       typeFunction(reminder, envPaths);
@@ -237,7 +236,7 @@ int main(int argc, char *argv[]) {
       cdFunction(reminder);
       break;
     default:
-      removeSingleQuotes(&reminder, true);
+      /* removeSingleQuotes(&reminder, true); */
       systemOtherFunction(operation, reminder, envPaths);
     }
     fflush(stdout);
