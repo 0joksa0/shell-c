@@ -13,6 +13,7 @@
 #define CD 22741260
 
 #define PATH_MAX 4096
+void removeSingleQuotes(char **, bool);
 
 int size = 0;
 char cwd[1024];
@@ -26,7 +27,9 @@ unsigned long hash(const char *str) {
   return hash;
 }
 
-char *getFunctionPath(char *function, char **envPaths) {
+char *getFunctionPath(char *input, char **envPaths) {
+  char *function = strdup(input);
+  removeSingleQuotes(&function, false);
   if (!function || !envPaths) {
     return NULL;
   }
@@ -36,9 +39,11 @@ char *getFunctionPath(char *function, char **envPaths) {
   for (int i = 0; i < size; i++) {
     snprintf(fullPath, PATH_MAX, "%s/%s", envPaths[i], function);
     if (access(fullPath, X_OK) == 0) {
+      free(function);
       return envPaths[i];
     }
   }
+  free(function);
   return NULL;
 }
 
@@ -184,10 +189,25 @@ void removeSingleQuotes(char **input, bool escChar) {
       continue;
     }
     if ((*input)[i] == '\\' && !singelQoute) {
-      shiftLeftFromPosition(input, i);
-      size--;
+      if (strlen(*input) <= i + 1)
+        continue;
+      if ((*input)[i + 1] == '$' || (*input)[i + 1] == '\\' ||
+          (*input)[i + 1] == '"' || (*input)[i + 1] == '\n') {
+        shiftLeftFromPosition(input, i);
+        size--;
+        continue;
+      }
+      if (!doubleQuote) {
+        shiftLeftFromPosition(input, i);
+        size--;
+        continue;
+      }
+
       continue;
     }
+    /* if ((*input)[i] == '\\' && !singelQoute && !doubleQuote) { */
+    /**/
+    /* } */
     if ((*input)[i] == ' ' && singelQoute && escChar) {
       shiftRightFromPosition(input, i);
       (*input)[i] = '\\';
@@ -200,6 +220,7 @@ void removeSingleQuotes(char **input, bool escChar) {
         shiftLeftFromPosition(input, i);
         size--;
         i--;
+        continue;
       }
       trailingSpace = true;
       continue;
@@ -209,6 +230,12 @@ void removeSingleQuotes(char **input, bool escChar) {
 }
 
 void cleanup(char **envPaths) { free(envPaths); }
+
+void trim(char **string) {
+  while ((*string)[0] == ' ') {
+    shiftLeftFromPosition(string, 0);
+  }
+}
 
 int main(int argc, char *argv[]) {
 
@@ -227,14 +254,34 @@ int main(int argc, char *argv[]) {
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = 0;
     char *reminder;
-    char *operation = strtok_r(input, " ", &reminder);
-    // printf("%lu", hash(operation));
+    char *operation;
+    if (input[0] == '\'') {
+      operation = strtok_r(input, "'", &reminder);
+      char quotedOperation[1024];
+      snprintf(quotedOperation, sizeof(quotedOperation), "'%s'", operation);
+
+      operation = strdup(quotedOperation);
+    } else if (input[0] == '\"') {
+      operation = strtok_r(input, "\"", &reminder);
+      char quotedOperation[1024];
+      snprintf(quotedOperation, sizeof(quotedOperation), "\"%s\"", operation);
+
+      operation = strdup(quotedOperation);
+    } else {
+      operation = strtok_r(input, " ", &reminder);
+    }
+    trim(&operation);
+    /* trim(&reminder); */
+    /* printf("operation %s, reminder %s ", operation, reminder); */
+    /* // printf("%lu", hash(operation)); */
+    /* printf("operation %s, reminder %s ", operation, reminder); */
     switch (hash(operation)) {
     case EXIT:
       cleanup(envPaths);
       exit(0);
       break;
     case ECHO:
+      /* printf("%s\n", reminder); */
       removeSingleQuotes(&reminder, false);
       printf("%s\n", reminder);
       break;
